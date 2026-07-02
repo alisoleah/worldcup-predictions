@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/AuthContext';
 import { LogOut, Trophy, Calendar, CheckCircle, Clock } from 'lucide-react';
 import { format, isPast, isFuture } from 'date-fns';
+import { getFlag } from '../lib/flags';
 
 export default function Dashboard() {
   const { user, profile, setProfile } = useAuth();
@@ -221,6 +222,7 @@ function MatchCard({ match, prediction, onSubmit }) {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
+          <span style={{ fontSize: '2rem' }} title={match.home_team}>{getFlag(match.home_team)}</span>
           <span style={{ fontSize: '1.25rem', fontWeight: 'bold', textAlign: 'center' }}>{match.home_team}</span>
         </div>
         
@@ -251,6 +253,7 @@ function MatchCard({ match, prediction, onSubmit }) {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
+          <span style={{ fontSize: '2rem' }} title={match.away_team}>{getFlag(match.away_team)}</span>
           <span style={{ fontSize: '1.25rem', fontWeight: 'bold', textAlign: 'center' }}>{match.away_team}</span>
         </div>
       </div>
