@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './lib/AuthContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import Admin from './pages/Admin';
 import './App.css';
 
 const ProtectedRoute = ({ children }) => {
@@ -25,6 +26,7 @@ function App() {
           </ProtectedRoute>
         } 
       />
+      <Route path="/admin" element={<Admin />} />
     </Routes>
   );
 }

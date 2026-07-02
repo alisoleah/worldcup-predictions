@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/AuthContext';
-import { LogOut, Trophy, Calendar, CheckCircle, Clock } from 'lucide-react';
+import { LogOut, Trophy, Calendar, CheckCircle, Clock, Users, X } from 'lucide-react';
 import { format, isPast, isFuture } from 'date-fns';
 import { getFlag } from '../lib/flags';
 
@@ -11,6 +11,9 @@ export default function Dashboard() {
   const [predictions, setPredictions] = useState({});
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showAllPredictionsModal, setShowAllPredictionsModal] = useState(false);
+  const [allPredictionsData, setAllPredictionsData] = useState([]);
+
 
   useEffect(() => {
     fetchData();
@@ -55,6 +58,20 @@ export default function Dashboard() {
       .select('*')
       .order('total_score', { ascending: false });
     if (data) setLeaderboard(data);
+  };
+
+  const handleOpenAllPredictions = async () => {
+    setShowAllPredictionsModal(true);
+    // Fetch all predictions joined with profiles
+    const { data, error } = await supabase
+      .from('predictions')
+      .select(`
+        *,
+        profiles:user_id (display_name, avatar_url)
+      `);
+    if (data && !error) {
+      setAllPredictionsData(data);
+    }
   };
 
   const handleSignOut = async () => {
@@ -122,9 +139,14 @@ export default function Dashboard() {
             <p style={{ color: 'var(--accent-color)', fontWeight: '600' }}>{profile?.total_score} Points</p>
           </div>
         </div>
-        <button onClick={handleSignOut} style={{ background: 'transparent', border: '1px solid var(--surface-border)', color: 'var(--text-primary)', padding: '0.5rem 1rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-          <LogOut size={16} /> Sign Out
-        </button>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button onClick={handleOpenAllPredictions} style={{ background: 'var(--accent-color)', border: 'none', color: 'white', padding: '0.5rem 1rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontWeight: 'bold' }}>
+            <Users size={16} /> Global Predictions
+          </button>
+          <button onClick={handleSignOut} style={{ background: 'transparent', border: '1px solid var(--surface-border)', color: 'var(--text-primary)', padding: '0.5rem 1rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+            <LogOut size={16} /> Sign Out
+          </button>
+        </div>
       </header>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem' }}>
@@ -194,9 +216,103 @@ export default function Dashboard() {
               ))}
             </div>
           </div>
+
+          {/* User Predictions Table */}
+          <div className="glass-panel" style={{ marginTop: '2rem' }}>
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', color: 'var(--accent-color)' }}>
+              <CheckCircle size={24} /> Your Predictions
+            </h2>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--surface-border)' }}>
+                    <th style={{ padding: '0.75rem 0.5rem', textAlign: 'left', color: 'var(--text-secondary)' }}>Match</th>
+                    <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Pick</th>
+                    <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Result</th>
+                    <th style={{ padding: '0.75rem 0.5rem', textAlign: 'right', color: 'var(--text-secondary)' }}>Pts</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {matches.filter(m => predictions[m.id]).length === 0 ? (
+                    <tr>
+                      <td colSpan="4" style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                        No predictions made yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    matches.filter(m => predictions[m.id]).map(match => {
+                      const pred = predictions[match.id];
+                      return (
+                        <tr key={match.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                          <td style={{ padding: '0.75rem 0.5rem' }}>
+                            {getFlag(match.home_team)} {match.home_team} <br/> 
+                            {getFlag(match.away_team)} {match.away_team}
+                          </td>
+                          <td style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 'bold' }}>
+                            {pred.home_score} - {pred.away_score}
+                          </td>
+                          <td style={{ padding: '0.75rem 0.5rem', textAlign: 'center' }}>
+                            {(match.status === 'finished' || match.status === 'live') ? `${match.home_score ?? '-'} - ${match.away_score ?? '-'}` : '-'}
+                          </td>
+                          <td style={{ padding: '0.75rem 0.5rem', textAlign: 'right', color: 'var(--warning-color)', fontWeight: 'bold' }}>
+                            {match.status === 'finished' ? pred.points_earned : '-'}
+                          </td>
+                        </tr>
+                      )
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
       </div>
+
+      {/* Global Predictions Modal */}
+      {showAllPredictionsModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '800px', maxHeight: '80vh', overflowY: 'auto', position: 'relative' }}>
+            <button 
+              onClick={() => setShowAllPredictionsModal(false)}
+              style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}
+            >
+              <X size={24} />
+            </button>
+            <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent-color)' }}>
+              <Users size={24} /> Global Predictions
+            </h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              {matches.map(match => {
+                const matchPreds = allPredictionsData.filter(p => p.match_id === match.id);
+                if (matchPreds.length === 0) return null;
+                
+                return (
+                  <div key={match.id} style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--surface-border)' }}>
+                    <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem' }}>
+                      {getFlag(match.home_team)} {match.home_team} vs {match.away_team} {getFlag(match.away_team)}
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 'normal', marginLeft: 'auto' }}>
+                        {match.status === 'finished' ? `Final: ${match.home_score} - ${match.away_score}` : 'Upcoming'}
+                      </span>
+                    </h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+                      {matchPreds.map(pred => (
+                        <div key={pred.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'rgba(0,0,0,0.3)', padding: '0.5rem', borderRadius: '6px' }}>
+                          <img src={pred.profiles?.avatar_url || 'https://via.placeholder.com/32'} alt="" style={{ width: '32px', height: '32px', borderRadius: '50%', border: '1px solid var(--accent-color)' }} />
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>{pred.profiles?.display_name || 'Unknown'}</span>
+                            <span style={{ fontSize: '1rem', color: 'var(--warning-color)', fontWeight: 'bold' }}>{pred.home_score} - {pred.away_score}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
