@@ -1,9 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 
 export default async function handler(req, res) {
-  // 1. Verify Vercel Cron Secret (Security)
-  if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
-    return res.status(401).json({ error: 'Unauthorized' });
+  // 1. Verify Authentication (Supports old Vercel Cron header OR simple URL key for cron-job.org)
+  const isAuthorizedHeader = req.headers.authorization === `Bearer ${process.env.CRON_SECRET}`;
+  const isAuthorizedQuery = req.query?.key === 'admin1234';
+
+  if (!isAuthorizedHeader && !isAuthorizedQuery) {
+    return res.status(401).json({ error: 'Unauthorized. Please provide ?key=admin1234 in the URL.' });
   }
 
   const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
