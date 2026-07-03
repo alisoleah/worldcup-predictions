@@ -40,7 +40,36 @@ export default function Login() {
   const [avatarUrl, setAvatarUrl] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState(false);
   const navigate = useNavigate();
+
+  const handleFileUpload = async (e) => {
+    try {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      setUploadingFile(true);
+      setError('');
+      
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file);
+        
+      if (uploadError) {
+        throw uploadError;
+      }
+      
+      const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
+      setAvatarUrl(data.publicUrl);
+    } catch (err) {
+      setError('Error uploading image: ' + err.message);
+    } finally {
+      setUploadingFile(false);
+    }
+  };
 
   const handleAuth = async (e) => {
     e.preventDefault();
@@ -65,7 +94,7 @@ export default function Login() {
 
     try {
       // Try to log in first
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email: dummyEmail,
         password: dummyPassword,
       });
@@ -86,6 +115,10 @@ export default function Login() {
         if (signUpError) {
           throw signUpError;
         }
+      } else if (avatarUrl.trim()) {
+        // Explicitly update profile avatar on login if one is selected
+        await supabase.auth.updateUser({ data: { avatar_url: avatarUrl.trim() } });
+        await supabase.from('profiles').update({ avatar_url: avatarUrl.trim() }).eq('id', signInData.user.id);
       }
       
       // If login or signup succeeds, navigate to home
@@ -149,6 +182,18 @@ export default function Login() {
                   }}
                 />
               ))}
+            </div>
+            
+            <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+              <p style={{ marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Or Upload Your Own:</p>
+              <input 
+                type="file" 
+                accept="image/*"
+                onChange={handleFileUpload}
+                disabled={uploadingFile}
+                style={{ fontSize: '0.875rem', maxWidth: '100%' }}
+              />
+              {uploadingFile && <span style={{ fontSize: '0.8rem', color: 'var(--accent-color)', marginLeft: '0.5rem' }}>Uploading...</span>}
             </div>
           </div>
 

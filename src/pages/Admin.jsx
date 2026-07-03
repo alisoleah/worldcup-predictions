@@ -293,12 +293,21 @@ export default function Admin() {
                     <tr key={user.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                       <td style={{ padding: '0.75rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                          <img src={user.avatar_url || 'https://via.placeholder.com/32'} alt="" style={{ width: '32px', height: '32px', borderRadius: '50%' }} />
-                          <input 
-                            value={user.display_name || ''} 
-                            onChange={(e) => handleChange('profiles', user.id, 'display_name', e.target.value)}
-                            style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid var(--surface-border)', color: 'white', padding: '0.5rem', borderRadius: '4px', width: '200px' }}
-                          />
+                          <img src={user.avatar_url || 'https://via.placeholder.com/32'} alt="" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                            <input 
+                              value={user.display_name || ''} 
+                              onChange={(e) => handleChange('profiles', user.id, 'display_name', e.target.value)}
+                              placeholder="Display Name"
+                              style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid var(--surface-border)', color: 'white', padding: '0.5rem', borderRadius: '4px', width: '200px' }}
+                            />
+                            <input 
+                              value={user.avatar_url || ''} 
+                              onChange={(e) => handleChange('profiles', user.id, 'avatar_url', e.target.value)}
+                              placeholder="Avatar URL"
+                              style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid var(--surface-border)', color: 'white', padding: '0.5rem', borderRadius: '4px', width: '200px', fontSize: '0.8rem' }}
+                            />
+                          </div>
                         </div>
                       </td>
                       <td style={{ padding: '0.75rem', textAlign: 'center' }}>
