@@ -5,6 +5,10 @@ import { useNavigate } from 'react-router-dom';
 const PREDEFINED_AVATARS = [
   // Custom
   { name: 'Galala', url: '/galala.jpg' },
+  { name: 'Essam', url: '/essam.jpg' },
+  { name: 'Shehab', url: '/shehab.jpg' },
+  { name: 'Iron Man', url: '/ironman.jpg' },
+  { name: 'Rapunzel', url: '/rapunzel.jpg' },
   // Footballers
   { name: 'Lionel Messi', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Lionel_Messi_NE_Revolution_Inter_Miami_7.9.25-055.jpg/330px-Lionel_Messi_NE_Revolution_Inter_Miami_7.9.25-055.jpg' },
   { name: 'Cristiano Ronaldo', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Cristiano_Ronaldo_2275_%28cropped%29.jpg/330px-Cristiano_Ronaldo_2275_%28cropped%29.jpg' },
@@ -25,10 +29,8 @@ const PREDEFINED_AVATARS = [
   { name: 'Ariel', url: 'https://upload.wikimedia.org/wikipedia/en/7/77/Ariel_disney.png' },
   { name: 'Cinderella', url: 'https://upload.wikimedia.org/wikipedia/en/7/75/Cinderella2024design.png' },
   { name: 'Moana', url: 'https://upload.wikimedia.org/wikipedia/en/5/56/Moana_%28character%29.png' },
-  { name: 'Rapunzel', url: '/rapunzel.jpg' },
   { name: 'Jasmine', url: 'https://upload.wikimedia.org/wikipedia/en/0/00/Jasmine_%28Aladdin%29.png' },
   { name: 'Spider-Man', url: 'https://upload.wikimedia.org/wikipedia/en/2/21/Web_of_Spider-Man_Vol_1_129-1.png' },
-  { name: 'Iron Man', url: '/ironman.jpg' },
   { name: 'Thor', url: 'https://upload.wikimedia.org/wikipedia/en/3/3c/Chris_Hemsworth_as_Thor.jpg' }
 ];
 
