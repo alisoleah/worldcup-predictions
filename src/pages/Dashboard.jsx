@@ -13,6 +13,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [showAllPredictionsModal, setShowAllPredictionsModal] = useState(false);
   const [allPredictionsData, setAllPredictionsData] = useState([]);
+  const [showUserPredictionsTable, setShowUserPredictionsTable] = useState(false);
 
 
   useEffect(() => {
@@ -131,7 +132,7 @@ export default function Dashboard() {
   }
 
   const upcomingMatches = matches.filter(m => isFuture(new Date(m.start_time)));
-  const finishedMatches = matches.filter(m => isPast(new Date(m.start_time)));
+  const finishedMatches = matches.filter(m => isPast(new Date(m.start_time))).sort((a, b) => new Date(b.start_time) - new Date(a.start_time));
 
   return (
     <div className="app-container">
@@ -199,7 +200,7 @@ export default function Dashboard() {
 
         {/* Right Column: Leaderboard */}
         <div>
-          <div className="glass-panel" style={{ position: 'sticky', top: '2rem' }}>
+          <div className="glass-panel">
             <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', color: 'var(--warning-color)' }}>
               <Trophy size={24} /> Leaderboard
             </h2>
@@ -229,56 +230,75 @@ export default function Dashboard() {
 
           {/* User Predictions Table */}
           <div className="glass-panel" style={{ marginTop: '2rem' }}>
-            <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', color: 'var(--accent-color)' }}>
-              <CheckCircle size={24} /> Your Predictions
-            </h2>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid var(--surface-border)' }}>
-                    <th style={{ padding: '0.75rem 0.5rem', textAlign: 'left', color: 'var(--text-secondary)' }}>Match</th>
-                    <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Pick</th>
-                    <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Result</th>
-                    <th style={{ padding: '0.75rem 0.5rem', textAlign: 'right', color: 'var(--text-secondary)' }}>Pts</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {matches.filter(m => predictions[m.id]).length === 0 ? (
-                    <tr>
-                      <td colSpan="4" style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                        No predictions made yet.
-                      </td>
-                    </tr>
-                  ) : (
-                    matches.filter(m => predictions[m.id]).map(match => {
-                      const pred = predictions[match.id];
-                      return (
-                        <tr key={match.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                          <td style={{ padding: '0.75rem 0.5rem' }}>
-                            {getFlag(match.home_team)} {match.home_team} <br/> 
-                            {getFlag(match.away_team)} {match.away_team}
-                          </td>
-                          <td style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 'bold' }}>
-                            {pred.home_score} - {pred.away_score}
-                            {pred.home_score === pred.away_score && pred.advancing_team && (
-                              <div style={{ fontSize: '0.75rem', color: 'var(--accent-color)' }}>
-                                {getFlag(pred.advancing_team)} Advances
-                              </div>
-                            )}
-                          </td>
-                          <td style={{ padding: '0.75rem 0.5rem', textAlign: 'center' }}>
-                            {(match.status === 'finished' || match.status === 'live') ? `${match.home_score ?? '-'} - ${match.away_score ?? '-'}` : '-'}
-                          </td>
-                          <td style={{ padding: '0.75rem 0.5rem', textAlign: 'right', color: 'var(--warning-color)', fontWeight: 'bold' }}>
-                            {match.status === 'finished' ? pred.points_earned : '-'}
-                          </td>
-                        </tr>
-                      )
-                    })
-                  )}
-                </tbody>
-              </table>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: showUserPredictionsTable ? '1.5rem' : '0' }}>
+              <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent-color)', margin: 0 }}>
+                <CheckCircle size={24} /> Your Predictions
+              </h2>
+              <button 
+                onClick={() => setShowUserPredictionsTable(!showUserPredictionsTable)}
+                style={{ 
+                  padding: '0.5rem 1rem', 
+                  fontSize: '0.875rem', 
+                  background: 'transparent', 
+                  border: '1px solid var(--accent-color)', 
+                  color: 'var(--accent-color)', 
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                {showUserPredictionsTable ? 'Hide Table' : 'Show Table'}
+              </button>
             </div>
+            
+            {showUserPredictionsTable && (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid var(--surface-border)' }}>
+                      <th style={{ padding: '0.75rem 0.5rem', textAlign: 'left', color: 'var(--text-secondary)' }}>Match</th>
+                      <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Pick</th>
+                      <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Result</th>
+                      <th style={{ padding: '0.75rem 0.5rem', textAlign: 'right', color: 'var(--text-secondary)' }}>Pts</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {matches.filter(m => predictions[m.id]).length === 0 ? (
+                      <tr>
+                        <td colSpan="4" style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                          No predictions made yet.
+                        </td>
+                      </tr>
+                    ) : (
+                      matches.filter(m => predictions[m.id]).map(match => {
+                        const pred = predictions[match.id];
+                        return (
+                          <tr key={match.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                            <td style={{ padding: '0.75rem 0.5rem' }}>
+                              {getFlag(match.home_team)} {match.home_team} <br/> 
+                              {getFlag(match.away_team)} {match.away_team}
+                            </td>
+                            <td style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 'bold' }}>
+                              {pred.home_score} - {pred.away_score}
+                              {pred.home_score === pred.away_score && pred.advancing_team && (
+                                <div style={{ fontSize: '0.75rem', color: 'var(--accent-color)' }}>
+                                  {getFlag(pred.advancing_team)} Advances
+                                </div>
+                              )}
+                            </td>
+                            <td style={{ padding: '0.75rem 0.5rem', textAlign: 'center' }}>
+                              {(match.status === 'finished' || match.status === 'live') ? `${match.home_score ?? '-'} - ${match.away_score ?? '-'}` : '-'}
+                            </td>
+                            <td style={{ padding: '0.75rem 0.5rem', textAlign: 'right', color: 'var(--warning-color)', fontWeight: 'bold' }}>
+                              {match.status === 'finished' ? pred.points_earned : '-'}
+                            </td>
+                          </tr>
+                        )
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
 
